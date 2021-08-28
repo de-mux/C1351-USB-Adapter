@@ -1,0 +1,25 @@
+{
+  "name": "LUFA",
+  "version": "210130",
+  "description": "Open-source USB library for USB-enabled AVR microcontrollers.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abcminiuser/lufa.git",
+    "branch": "210130"
+  },
+  "build": {
+    "srcDir": ".",
+    "srcFilter": [
+        "+<*>",
+        "-<CodeTemplates>"
+    ],
+    "includeDir": "..",
+    "flags": [
+        "-IBuild/DMBS/Template/lib/TEMPLATE_LIB/include",
+        "-IDrivers",
+        "-IDrivers/USB",
+        "-I..",
+        "-Ilib/LUFA/Drivers"
+    ]
+  }
+}
