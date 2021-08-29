@@ -37,6 +37,9 @@
 #include "mouse.h"
 
 
+USB_MouseReport_Data_t mouse_report_data;
+
+
 /** Buffer to hold the previously generated Mouse HID report, for comparison purposes inside the HID class driver. */
 static uint8_t PrevMouseHIDReportBuffer[sizeof(USB_MouseReport_Data_t)];
 
@@ -60,9 +63,24 @@ USB_ClassInfo_HID_Device_t Mouse_HID_Interface = {
 };
 
 
+/* Set values of USB mouse. */
+void setUsbMouse(int8_t x, int8_t y, uint8_t button)
+{
+    mouse_report_data.Button = button;
+    mouse_report_data.X = x;
+    mouse_report_data.Y = y;
+}
+
+
+void initMouseReportData(void)
+{
+    setUsbMouse(0, 0, 0);
+}
+
 
 void setupUsbMouse(void)
 {
+    initMouseReportData();
     SetupHardware();
 
     LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
@@ -158,30 +176,31 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const
         void* ReportData,
         uint16_t* const ReportSize)
 {
-    USB_MouseReport_Data_t* MouseReport = (USB_MouseReport_Data_t*)ReportData;
+    //USB_MouseReport_Data_t* mouse_report = (USB_MouseReport_Data_t*)ReportData;
 
     /*
         uint8_t JoyStatus_LCL    = Joystick_GetStatus();
         uint8_t ButtonStatus_LCL = Buttons_GetStatus();
 
         if (JoyStatus_LCL & JOY_UP)
-        MouseReport->Y = -1;
+        mouse_report->Y = -1;
         else if (JoyStatus_LCL & JOY_DOWN)
-        MouseReport->Y =  1;
+        mouse_report->Y =  1;
 
         if (JoyStatus_LCL & JOY_LEFT)
-        MouseReport->X = -1;
+        mouse_report->X = -1;
         else if (JoyStatus_LCL & JOY_RIGHT)
-        MouseReport->X =  1;
+        mouse_report->X =  1;
 
         if (JoyStatus_LCL & JOY_PRESS)
-        MouseReport->Button |= (1 << 0);
+        mouse_report->Button |= (1 << 0);
 
         if (ButtonStatus_LCL & BUTTONS_BUTTON1)
-        MouseReport->Button |= (1 << 1);
+        mouse_report->Button |= (1 << 1);
     */
-    MouseReport->X = 1;
+    //mouse_report->X = 1;
 
+    *(USB_MouseReport_Data_t*)ReportData = mouse_report_data;
     *ReportSize = sizeof(USB_MouseReport_Data_t);
     return true;
 }

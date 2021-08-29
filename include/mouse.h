@@ -70,9 +70,11 @@ extern "C"
 /** LED mask for the library LED driver, to indicate that an error has occurred in the USB interface. */
 #define LEDMASK_USB_ERROR        (LEDS_LED1 | LEDS_LED3)
 
-/* Function Prototypes: */
 void SetupHardware();
 void setupUsbMouse();
+/* Set values of USB mouse. */
+void setUsbMouse(int8_t x, int8_t y, uint8_t button);
+/* Call after setUsbMouse to send to USB */
 void handleUsb();
 
 void EVENT_USB_Device_Connect();
