@@ -22,6 +22,8 @@
 #define MAIN_INTERRUPT_INTERVAL_US 256
 
 
+C1351Interface c1351;
+
 /* Mode for the main interrupt. Toggles between discharging and reading the
  * POTX/POTY pins.
  */
@@ -43,21 +45,34 @@ void setDebugHigh()
 }
 
 
+void updateUsbMouse()
+{
+    auto x = c1351.getVelocityX();
+    auto y = c1351.getVelocityY();
+    uint8_t lbutton = c1351.getLeftButtonValue();
+    uint8_t rbutton = c1351.getRightButtonValue();
+    uint8_t buttons = lbutton | (rbutton << 1);
+    setUsbMouse(x, y, buttons);
+}
+
+
 ISR(TIMER4_COMPA_vect)
 {
     static volatile uint8_t mode = POT_MODE_DISCHARGE;
 
     if (mode == POT_MODE_DISCHARGE) {
-        setDebugLow();
-        c1351Sync();
+        c1351.setModeSync();
 
+        updateUsbMouse();
         handleUsb();
+
+        //setDebugLow();
 
         mode = POT_MODE_READ;
     }
     else {  // POT_MODE_READ
-        setDebugHigh();
-        c1351Read();
+        //setDebugHigh();
+        c1351.setModeRead();
 
         mode = POT_MODE_DISCHARGE;
     }
@@ -98,7 +113,7 @@ int main(void)
 {
     setupUsbMouse();
     setupIO();
-    c1351Init();
+    c1351.init();
     setupMainInterrupt(MAIN_INTERRUPT_INTERVAL_US);
     //setupControllerInterface();
 

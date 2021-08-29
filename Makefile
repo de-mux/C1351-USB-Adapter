@@ -2,7 +2,7 @@ BUILD_DIR=.pio/build/itsybitsy32u4_5V
 DEBUG_BUILD_DIR=.pio/build/debug
 
 all:
-	pio run
+	pio run -v
 	pio run -t compiledb
 
 upload:
