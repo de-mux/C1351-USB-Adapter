@@ -72,7 +72,7 @@ extern "C"
 
 void SetupHardware();
 void setupUsbMouse();
-/* Set values of USB mouse. */
+/* Set values of USB mouse */
 void setUsbMouse(int8_t x, int8_t y, uint8_t button);
 /* Call after setUsbMouse to send to USB */
 void handleUsb();

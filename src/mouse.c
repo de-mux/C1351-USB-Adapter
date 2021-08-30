@@ -37,7 +37,8 @@
 #include "mouse.h"
 
 
-USB_MouseReport_Data_t mouse_report_data;
+volatile USB_MouseReport_Data_t mouse_report_data;
+volatile bool needs_update = true;
 
 
 /** Buffer to hold the previously generated Mouse HID report, for comparison purposes inside the HID class driver. */
@@ -66,9 +67,20 @@ USB_ClassInfo_HID_Device_t Mouse_HID_Interface = {
 /* Set values of USB mouse. */
 void setUsbMouse(int8_t x, int8_t y, uint8_t button)
 {
-    mouse_report_data.Button = button;
-    mouse_report_data.X = x;
-    mouse_report_data.Y = y;
+    if (x || x != mouse_report_data.X) {
+        mouse_report_data.X = x;
+        needs_update = true;
+    }
+
+    if (y || y != mouse_report_data.Y) {
+        mouse_report_data.Y = y;
+        needs_update = true;
+    }
+
+    if (button != mouse_report_data.Button) {
+        mouse_report_data.Button = button;
+        needs_update = true;
+    }
 }
 
 
@@ -81,8 +93,9 @@ void initMouseReportData(void)
 void setupUsbMouse(void)
 {
     initMouseReportData();
-    SetupHardware();
+    handleUsb();
 
+    SetupHardware();
     LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
     GlobalInterruptEnable();
 }
@@ -91,12 +104,28 @@ void setupUsbMouse(void)
 /** Called in a loop to handle USB events. */
 inline void handleUsb(void)
 {
+    /* General management task for a given HID class interface, required for the
+     * correct operation of the interface. This should be called frequently in
+     * the main program loop, before the master USB management task USB_USBTask().
+     */
     HID_Device_USBTask(&Mouse_HID_Interface);
+    /*  This is the main USB management task. The USB driver requires this task to be
+     *  executed continuously when the USB system is active (device attached in host
+     *  mode, or attached to a host in device mode) in order to manage USB communications.
+     *  This task may be executed inside an RTOS, fast timer ISR or the main user
+     *  application loop.
+     *  The USB task must be serviced within 30ms while in device mode, or within
+     *  1ms while in host mode. The task may be serviced at all times, or (for
+     *  minimum CPU consumption):
+     *  In device mode, it may be disabled at start-up, enabled on the firing of
+     *  the EVENT_USB_Device_Connect() event and disabled again on the firing of
+     *  the EVENT_USB_Device_Disconnect() event.
+     */
     USB_USBTask();
 }
 
 
-/** Configures the board hardware and chip peripherals for the demo's functionality. */
+/** Configures the board hardware and chip peripherals */
 void SetupHardware(void)
 {
 #if (ARCH == ARCH_AVR8)
@@ -167,7 +196,9 @@ void EVENT_USB_Device_StartOfFrame(void)
     \param[out]    ReportData  Pointer to a buffer where the created report should be stored
     \param[out]    ReportSize  Number of bytes written in the report (or zero if no report is to be sent)
 
-    \return Boolean \c true to force the sending of the report, \c false to let the library determine if it needs to be sent
+    \return Boolean \c true to force the sending of the report(useful for devices
+        that report relative movement), \c false to let the library determine
+        if it needs to be sent
 */
 bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const
         HIDInterfaceInfo,
@@ -202,7 +233,12 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const
 
     *(USB_MouseReport_Data_t*)ReportData = mouse_report_data;
     *ReportSize = sizeof(USB_MouseReport_Data_t);
-    return true;
+
+    if (needs_update) {
+        needs_update = false;
+        return true;
+    }
+    return false;
 }
 
 /** HID class driver callback function for the processing of HID reports from the host.
