@@ -21,6 +21,11 @@ public:
         The time elapsed indicates the mouse position.
     */
     void setModeRead();
+    /* Call regularly to update mouse state. Then use
+     * getVelocityX, getVelocityY, getLeftButtonValue,
+     * and getRightButtonValue
+     */
+    void update();
 
     int8_t getVelocityX();
     int8_t getVelocityY();
@@ -36,11 +41,13 @@ protected:
     volatile PotValue potYValueOld = 0;
     volatile int8_t velocityX = 0;
     volatile int8_t velocityY = 0;
+    volatile int16_t velocityAccumX = 0;
+    volatile int16_t velocityAccumY = 0;
     volatile bool buttonLeftPressed = false;
     volatile bool buttonRightPressed = false;
 
     void updatePotValues();
-    void updateVelocities();
+    void accumulateVelocities();
     void setPotsOutputLow();
     void setPotsInput();
     /* Read the most recent POTX and POTY values. */

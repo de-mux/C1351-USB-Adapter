@@ -7,7 +7,8 @@
 
 
 C1351Interface::C1351Interface() : potXValue(0), potYValue(0), potXValueOld(0),
-    potYValueOld(0), velocityX(0), velocityY(0), buttonLeftPressed(false),
+    potYValueOld(0), velocityX(0), velocityY(0), velocityAccumX(0), velocityAccumY(0),
+    buttonLeftPressed(false),
     buttonRightPressed(false)
 {
 }
@@ -15,8 +16,6 @@ C1351Interface::C1351Interface() : potXValue(0), potYValue(0), potXValueOld(0),
 
 void C1351Interface::init()
 {
-    potXValue = 0;
-    potYValue = 0;
     setPotsOutputLow();
 
     initInputCapture();
@@ -25,21 +24,16 @@ void C1351Interface::init()
 
 void C1351Interface::setModeSync()
 {
-    /* FIXME: move this to a routine in main */
-    static uint8_t ticker = 0;
-
+    // TODO: are these necessary?
     disarmInputCapture(TIMER_1);
     disarmInputCapture(TIMER_3);
 
-    setPotsOutputLow();
-
     armInputCapture();
 
-    ticker = (ticker + 1) % 40;
-    if (ticker == 0) {
-        updatePotValues();
-        updateVelocities();
-    }
+    setPotsOutputLow();
+
+    updatePotValues();
+    accumulateVelocities();
 }
 
 
@@ -62,12 +56,32 @@ void C1351Interface::updatePotValues()
 /*  Call updatePotValues() before calling this to ensure they are up
     to date.
 */
-void C1351Interface::updateVelocities()
+void C1351Interface::accumulateVelocities()
 {
-    const auto shift_bits = captureTimerBits - potValueBits;
+    //const auto shift_bits = captureTimerBits - potValueBits;
 
-    velocityX = potValueToVelocity(potXValueOld, potXValue) / 16;
-    velocityY = -potValueToVelocity(potYValueOld, potYValue) / 16;
+    //velocityX = potValueToVelocity(potXValueOld, potXValue) / 16;
+    //velocityY = -potValueToVelocity(potYValueOld, potYValue) / 16;
+    //PORT(PORT_DEBUG) &= ~_BV(PIN_DEBUG);
+
+    velocityAccumX += (potValueToVelocity(potXValueOld, potXValue) / 16);
+    velocityAccumY += (-potValueToVelocity(potYValueOld, potYValue) / 16);
+    //PORT(PORT_DEBUG) |= _BV(PIN_DEBUG);
+}
+
+
+/*  Call regularly to update mouse state. Then use
+    getVelocityX, getVelocityY, getLeftButtonValue,
+    and getRightButtonValue
+*/
+void C1351Interface::update()
+{
+    velocityX = velocityAccumX;
+    velocityY = velocityAccumY;
+    velocityAccumX = 0;
+    velocityAccumY = 0;
+    //updatePotValues();
+    //updateVelocities();
 }
 
 
@@ -127,18 +141,18 @@ void C1351Interface::setPotsInput()
 /* 16-bit */
 int16_t C1351Interface::potValueToVelocity(PotValue oldVal, PotValue newVal)
 {
-    uint16_t diff = (newVal - oldVal) & 0x7ff;
-    bool isPositive = diff < 0b010000000000;
+    uint16_t diff = (newVal - oldVal) & 0x7ff;  // 2047
+    bool isPositive = diff < (1 << 10);  // 1024
 
     if (isPositive) {  // diff is positive
-        diff = diff >> 1;
+        diff = diff >> 1;  // /2
         return (int16_t)diff;
     }
     else {    // diff is negative
         diff |= 0b1111100000000000;
+
         if (diff != 0xffff) {
-            diff = (diff >> 1) | 0b1000000000000000;
-            //int8_t newDiff = 0xff - diff;
+            diff = (diff >> 1) | (1 << 15);  // /2
             return (int16_t)diff;
         }
 

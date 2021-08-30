@@ -37,6 +37,10 @@
 
 #include "descriptors.h"
 
+#define AXIS_MIN -127
+#define AXIS_MAX 127
+
+
 /** HID class report descriptor. This is a special descriptor constructed with values from the
     USBIF HID class specification to describe the reports and capabilities of the HID device. This
     descriptor is parsed by the host and its contents used to determine what data (and in what encoding)
@@ -45,14 +49,14 @@
 */
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM MouseReport[] = {
     /*  Use the HID class driver's standard Mouse report.
-         Min X/Y Axis values: -1
-         Max X/Y Axis values:  1
+         Min logical X/Y Axis values: -1
+         Max logical X/Y Axis values:  1
          Min physical X/Y Axis values (used to determine resolution): -1
          Max physical X/Y Axis values (used to determine resolution):  1
          Buttons: 2
          Absolute screen coordinates: false
     */
-    HID_DESCRIPTOR_MOUSE(-1, 1, -1, 1, 2, false)
+    HID_DESCRIPTOR_MOUSE(AXIS_MIN, AXIS_MAX, AXIS_MIN, AXIS_MAX, 2, false)
 };
 
 /** Device descriptor structure. This descriptor, located in FLASH memory, describes the overall
@@ -159,7 +163,7 @@ const USB_Descriptor_String_t PROGMEM ManufacturerString = USB_STRING_DESCRIPTOR
     Descriptor.
 */
 const USB_Descriptor_String_t PROGMEM ProductString = USB_STRING_DESCRIPTOR(
-            L"C1351 Mouse");
+            L"C1351 Mouse Adapter");
 
 /** This function is called by the library when in device mode, and must be overridden (see library "USB Descriptors"
     documentation) by the application code so that the address and size of a requested descriptor can be given

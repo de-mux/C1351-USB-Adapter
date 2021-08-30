@@ -45,6 +45,9 @@ void setDebugHigh()
 }
 
 
+/* Update the USB mouse report values to be sent. Returns true if values
+ * changed since last called.
+ */
 void updateUsbMouse()
 {
     auto x = c1351.getVelocityX();
@@ -59,16 +62,23 @@ void updateUsbMouse()
 ISR(TIMER4_COMPA_vect)
 {
     static volatile uint8_t mode = POT_MODE_DISCHARGE;
+    static uint8_t ticker = 0;
 
     if (mode == POT_MODE_DISCHARGE) {
+        //setDebugHigh();
         c1351.setModeSync();
 
-        updateUsbMouse();
-        handleUsb();
+        ticker = (ticker + 1) % 40;
+        if (ticker == 0) {
+            c1351.update();
+            updateUsbMouse();
+            handleUsb();
+        }
 
-        //setDebugLow();
 
         mode = POT_MODE_READ;
+
+        //setDebugLow();
     }
     else {  // POT_MODE_READ
         //setDebugHigh();
