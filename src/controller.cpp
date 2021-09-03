@@ -3,7 +3,9 @@
 
 #include "capture_timer.hpp"
 #include "controller.hpp"
-#include "pins.hpp"
+#ifdef ENABLE_VIRTUAL_SERIAL
+#include "mouse.h"
+#endif
 
 
 C1351Interface::C1351Interface() : potXValue(0), potYValue(0), potXValueOld(0),
@@ -14,9 +16,23 @@ C1351Interface::C1351Interface() : potXValue(0), potYValue(0), potXValueOld(0),
 }
 
 
+void C1351Interface::initIO()
+{
+    io_pin.debug.setDirectionOut();
+
+    io_pin.up_btn2.setDirectionIn();
+    io_pin.down.setDirectionIn();
+    io_pin.left.setDirectionIn();
+    io_pin.right.setDirectionIn();
+    io_pin.btn1.setDirectionIn();
+
+    setPotsOutputLow();
+}
+
+
 void C1351Interface::init()
 {
-    setPotsOutputLow();
+    initIO();
 
     initInputCapture();
 }
@@ -24,6 +40,8 @@ void C1351Interface::init()
 
 void C1351Interface::setModeSync()
 {
+    io_pin.debug.low();
+
     // TODO: are these necessary?
     disarmInputCapture(TIMER_1);
     disarmInputCapture(TIMER_3);
@@ -34,11 +52,14 @@ void C1351Interface::setModeSync()
 
     updatePotValues();
     accumulateVelocities();
+
+    updateButtons();
 }
 
 
 void C1351Interface::setModeRead()
 {
+    io_pin.debug.high();
     setPotsInput();
 }
 
@@ -63,10 +84,17 @@ void C1351Interface::accumulateVelocities()
     //velocityX = potValueToVelocity(potXValueOld, potXValue) / 16;
     //velocityY = -potValueToVelocity(potYValueOld, potYValue) / 16;
     //PORT(PORT_DEBUG) &= ~_BV(PIN_DEBUG);
+    auto new_x_velocity = potValueToVelocity(potXValueOld, potXValue);
+    auto new_y_velocity = -potValueToVelocity(potYValueOld, potYValue);
 
-    velocityAccumX += (potValueToVelocity(potXValueOld, potXValue) / 16);
-    velocityAccumY += (-potValueToVelocity(potYValueOld, potYValue) / 16);
+    velocityAccumX += new_x_velocity; // / 16;
+    velocityAccumY += new_y_velocity; // / 16;
     //PORT(PORT_DEBUG) |= _BV(PIN_DEBUG);
+}
+
+
+void C1351Interface::updateButtons()
+{
 }
 
 
@@ -76,8 +104,11 @@ void C1351Interface::accumulateVelocities()
 */
 void C1351Interface::update()
 {
-    velocityX = velocityAccumX;
-    velocityY = velocityAccumY;
+#ifdef ENABLE_VIRTUAL_SERIAL
+    serialPrintNum(velocityAccumX/16);
+#endif
+    velocityX = velocityAccumX / 16;
+    velocityY = velocityAccumY / 16;
     velocityAccumX = 0;
     velocityAccumY = 0;
     //updatePotValues();
@@ -123,40 +154,32 @@ bool C1351Interface::getRightButtonValue()
 
 void C1351Interface::setPotsOutputLow()
 {
-    PORT(PORT_POTY) &= ~_BV(PIN_POTY);
-    DDR(PORT_POTY) |= _BV(PIN_POTY);
+    io_pin.poty.low();
+    io_pin.poty.setDirectionOut();
 
-    PORT(PORT_BTN2_POTX) &= ~_BV(PIN_BTN2_POTX);
-    DDR(PORT_BTN2_POTX) |= _BV(PIN_BTN2_POTX);
+    io_pin.btn2_potx.low();
+    io_pin.btn2_potx.setDirectionOut();
 }
 
 
 void C1351Interface::setPotsInput()
 {
-    DDR(PORT_POTY) &= ~_BV(PIN_POTY);
-    DDR(PORT_BTN2_POTX) &= ~_BV(PIN_BTN2_POTX);
+    io_pin.poty.setDirectionIn();
+    io_pin.btn2_potx.setDirectionIn();
 }
 
 
-/* 16-bit */
 int16_t C1351Interface::potValueToVelocity(PotValue oldVal, PotValue newVal)
 {
     uint16_t diff = (newVal - oldVal) & 0x7ff;  // 2047
     bool isPositive = diff < (1 << 10);  // 1024
 
     if (isPositive) {  // diff is positive
-        diff = diff >> 1;  // /2
         return (int16_t)diff;
     }
     else {    // diff is negative
         diff |= 0b1111100000000000;
-
-        if (diff != 0xffff) {
-            diff = (diff >> 1) | (1 << 15);  // /2
-            return (int16_t)diff;
-        }
-
-        return 0;
+        return (int16_t)diff;
     }
 }
 

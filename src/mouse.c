@@ -40,6 +40,48 @@
 volatile USB_MouseReport_Data_t mouse_report_data;
 volatile bool needs_update = true;
 
+#ifdef ENABLE_VIRTUAL_SERIAL
+/** LUFA CDC Class driver interface configuration and state information. This structure is
+    passed to all CDC Class driver functions, so that multiple instances of the same class
+    within a device can be differentiated from one another.
+*/
+USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface = {
+    .Config =
+    {
+        .ControlInterfaceNumber         = INTERFACE_ID_CDC_CCI,
+        .DataINEndpoint                 =
+        {
+            .Address                = CDC_TX_EPADDR,
+            .Size                   = CDC_TXRX_EPSIZE,
+            .Banks                  = 1,
+        },
+        .DataOUTEndpoint                =
+        {
+            .Address                = CDC_RX_EPADDR,
+            .Size                   = CDC_TXRX_EPSIZE,
+            .Banks                  = 1,
+        },
+        .NotificationEndpoint           =
+        {
+            .Address                = CDC_NOTIFICATION_EPADDR,
+            .Size                   = CDC_NOTIFICATION_EPSIZE,
+            .Banks                  = 1,
+        },
+    },
+};
+
+
+
+char serial_out_str[16];
+volatile bool serial_data_waiting = false;
+
+void serialPrintNum(int16_t n)
+{
+    sprintf(serial_out_str, "%d\r\n", n);
+    serial_data_waiting = true;
+}
+
+#endif
 
 /** Buffer to hold the previously generated Mouse HID report, for comparison purposes inside the HID class driver. */
 static uint8_t PrevMouseHIDReportBuffer[sizeof(USB_MouseReport_Data_t)];
@@ -51,15 +93,15 @@ static uint8_t PrevMouseHIDReportBuffer[sizeof(USB_MouseReport_Data_t)];
 USB_ClassInfo_HID_Device_t Mouse_HID_Interface = {
     .Config =
     {
-        .InterfaceNumber              = INTERFACE_ID_Mouse,
-        .ReportINEndpoint             =
+        .InterfaceNumber          = INTERFACE_ID_Mouse,
+        .ReportINEndpoint         =
         {
             .Address              = MOUSE_EPADDR,
             .Size                 = MOUSE_EPSIZE,
             .Banks                = 1,
         },
-        .PrevReportINBuffer           = PrevMouseHIDReportBuffer,
-        .PrevReportINBufferSize       = sizeof(PrevMouseHIDReportBuffer),
+        .PrevReportINBuffer       = PrevMouseHIDReportBuffer,
+        .PrevReportINBufferSize   = sizeof(PrevMouseHIDReportBuffer),
     },
 };
 
@@ -104,23 +146,35 @@ void setupUsbMouse(void)
 /** Called in a loop to handle USB events. */
 inline void handleUsb(void)
 {
-    /* General management task for a given HID class interface, required for the
-     * correct operation of the interface. This should be called frequently in
-     * the main program loop, before the master USB management task USB_USBTask().
-     */
+#ifdef ENABLE_VIRTUAL_SERIAL
+    //char report_string[16];
+    //sprintf(report_string, "%d", 42);
+
+    if (serial_data_waiting) {
+        CDC_Device_SendString(&VirtualSerial_CDC_Interface, serial_out_str);
+    }
+
+    /* Must throw away unused bytes from the host, or it will lock up while waiting for the device */
+    CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
+    CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
+#endif
+    /*  General management task for a given HID class interface, required for the
+        correct operation of the interface. This should be called frequently in
+        the main program loop, before the master USB management task USB_USBTask().
+    */
     HID_Device_USBTask(&Mouse_HID_Interface);
     /*  This is the main USB management task. The USB driver requires this task to be
-     *  executed continuously when the USB system is active (device attached in host
-     *  mode, or attached to a host in device mode) in order to manage USB communications.
-     *  This task may be executed inside an RTOS, fast timer ISR or the main user
-     *  application loop.
-     *  The USB task must be serviced within 30ms while in device mode, or within
-     *  1ms while in host mode. The task may be serviced at all times, or (for
-     *  minimum CPU consumption):
-     *  In device mode, it may be disabled at start-up, enabled on the firing of
-     *  the EVENT_USB_Device_Connect() event and disabled again on the firing of
-     *  the EVENT_USB_Device_Disconnect() event.
-     */
+        executed continuously when the USB system is active (device attached in host
+        mode, or attached to a host in device mode) in order to manage USB communications.
+        This task may be executed inside an RTOS, fast timer ISR or the main user
+        application loop.
+        The USB task must be serviced within 30ms while in device mode, or within
+        1ms while in host mode. The task may be serviced at all times, or (for
+        minimum CPU consumption):
+        In device mode, it may be disabled at start-up, enabled on the firing of
+        the EVENT_USB_Device_Connect() event and disabled again on the firing of
+        the EVENT_USB_Device_Disconnect() event.
+    */
     USB_USBTask();
 }
 
@@ -170,6 +224,9 @@ void EVENT_USB_Device_ConfigurationChanged(void)
     bool ConfigSuccess = true;
 
     ConfigSuccess &= HID_Device_ConfigureEndpoints(&Mouse_HID_Interface);
+#ifdef ENABLE_VIRTUAL_SERIAL
+    ConfigSuccess &= CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
+#endif
 
     USB_Device_EnableSOFEvents();
 
@@ -179,6 +236,9 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 /** Event handler for the library USB Control Request reception event. */
 void EVENT_USB_Device_ControlRequest(void)
 {
+#ifdef ENABLE_VIRTUAL_SERIAL
+    CDC_Device_ProcessControlRequest(&VirtualSerial_CDC_Interface);
+#endif
     HID_Device_ProcessControlRequest(&Mouse_HID_Interface);
 }
 
@@ -238,6 +298,7 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const
         needs_update = false;
         return true;
     }
+
     return false;
 }
 
@@ -259,3 +320,24 @@ void CALLBACK_HID_Device_ProcessHIDReport(USB_ClassInfo_HID_Device_t* const
     // Unused (but mandatory for the HID class driver) in this demo, since there are no Host->Device reports
 }
 
+#ifdef ENABLE_VIRTUAL_SERIAL
+/** CDC class driver callback function the processing of changes to the virtual
+    control lines sent from the host..
+
+    \param[in] CDCInterfaceInfo  Pointer to the CDC class interface configuration structure being referenced
+*/
+void EVENT_CDC_Device_ControLineStateChanged(USB_ClassInfo_CDC_Device_t* const
+        CDCInterfaceInfo)
+{
+    /*  You can get changes to the virtual CDC lines in this callback; a common
+        use-case is to use the Data Terminal Ready (DTR) flag to enable and
+        disable CDC communications in your application when set to avoid the
+        application blocking while waiting for a host to become ready and read
+        in the pending data from the USB endpoints.
+    */
+    bool HostReady = (CDCInterfaceInfo->State.ControlLineStates.HostToDevice &
+                      CDC_CONTROL_LINE_OUT_DTR) != 0;
+
+    (void)HostReady;
+}
+#endif
