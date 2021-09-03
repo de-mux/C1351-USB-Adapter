@@ -4,10 +4,12 @@ DEBUG_BUILD_DIR=.pio/build/debug
 all:
 	pio run -v
 	pio run -t compiledb
+	avr-objdump -S ${BUILD_DIR}/firmware.elf > ${BUILD_DIR}/firmware.s
 
 upload:
 	pio run -t upload
 	pio run -t compiledb
+	avr-objdump -S ${BUILD_DIR}/firmware.elf > ${BUILD_DIR}/firmware.s
 
 clean:
 	pio run -t clean

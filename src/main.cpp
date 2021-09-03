@@ -16,7 +16,6 @@
 
 #include "controller.hpp"
 #include "mouse.h"
-#include "pins.hpp"
 
 
 #define MAIN_INTERRUPT_INTERVAL_US 256
@@ -31,18 +30,6 @@ enum {
     POT_MODE_DISCHARGE = 0,
     POT_MODE_READ
 };
-
-
-void setDebugLow()
-{
-    PORT(PORT_DEBUG) &= ~_BV(PIN_DEBUG);
-}
-
-
-void setDebugHigh()
-{
-    PORT(PORT_DEBUG) |= _BV(PIN_DEBUG);
-}
 
 
 /* Update the USB mouse report values to be sent. Returns true if values
@@ -65,7 +52,6 @@ ISR(TIMER4_COMPA_vect)
     static uint8_t ticker = 0;
 
     if (mode == POT_MODE_DISCHARGE) {
-        //setDebugHigh();
         c1351.setModeSync();
 
         ticker = (ticker + 1) % 40;
@@ -75,21 +61,15 @@ ISR(TIMER4_COMPA_vect)
             handleUsb();
         }
 
-
         mode = POT_MODE_READ;
-
-        //setDebugLow();
     }
     else {  // POT_MODE_READ
-        //setDebugHigh();
         c1351.setModeRead();
 
         mode = POT_MODE_DISCHARGE;
     }
-    //PORTB |= _BV(PB6);
     //HID_Device_USBTask(&Mouse_HID_Interface);
     //USB_USBTask();
-    //PORTB &= !_BV(PB6);
 }
 
 
@@ -114,7 +94,7 @@ void setupMainInterrupt(int interval_us)
 
 void setupIO(void)
 {
-    DDR(PORT_DEBUG) |= _BV(PIN_DEBUG);
+    //DDR(PORT_DEBUG) |= _BV(PIN_DEBUG);
 }
 
 
@@ -125,7 +105,6 @@ int main(void)
     setupIO();
     c1351.init();
     setupMainInterrupt(MAIN_INTERRUPT_INTERVAL_US);
-    //setupControllerInterface();
 
     for (;;) {
         // For now, this happens in the interrupt, though we may want to move it here

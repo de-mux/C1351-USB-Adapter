@@ -18,7 +18,6 @@
 #include <stdint.h>
 
 #include "capture_timer.hpp"
-#include "pins.hpp"
 
 
 volatile uint16_t overflowsTimer1 = 0;
@@ -150,7 +149,6 @@ void armInputCapture()
 
     startTimer1();
     startTimer3();
-    //PORT(PORT_DEBUG) &= ~_BV(PIN_DEBUG);
     //sei();
 }
 

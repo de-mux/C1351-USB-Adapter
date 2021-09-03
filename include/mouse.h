@@ -77,6 +77,10 @@ void setUsbMouse(int8_t x, int8_t y, uint8_t button);
 /* Call after setUsbMouse to send to USB */
 void handleUsb();
 
+#ifdef ENABLE_VIRTUAL_SERIAL
+void serialPrintNum(int16_t);
+#endif
+
 void EVENT_USB_Device_Connect();
 void EVENT_USB_Device_Disconnect();
 void EVENT_USB_Device_ConfigurationChanged();
