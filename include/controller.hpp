@@ -6,6 +6,8 @@
 #include "iopin.hpp"
 
 
+namespace c1351_mouse {
+
 typedef uint16_t PotValue;
 
 
@@ -48,21 +50,41 @@ struct C1351_IO {
 
 
 //template<typename IO_PIN_TYPE>
+
+
+/*  C1351 mouse interface.
+ *
+ *  setModeSync() and setModeRead() are used to read X and Y positions of the mouse.
+ *
+ *  Every 512uS, use the following sequence:
+ *  - Call setModeSync(). This initiates a read cycle on the C1351 and
+ *    starts a timer that will stop when the POTX and POTY lines of the C1351
+ *    go high
+ *  - Wait about 256uS
+ *  - Call setModeRead(). This puts the POTX and POTY pins into input mode.
+ *    As each pin is driven high by the C1351, its respective timer stops.
+ *    The time elapsed since calling setModeSync() is used to determine the
+ *    X and Y position.
+ *
+ * In order to ensure accurate readings, the input capture pins are used, which
+ * allow timestamping via pure hardware. Thus, the readings are not affected by
+ * program execution time or interrupts such as the USB interrupt.
+ * For this reason, the microcontroller must have at least two ICP pins. This
+ * implementation uses ICP1 and ICP3, which use timer 1 and timer 3,
+ * respectively.
+*/
 class C1351Interface {
 
 public:
     C1351Interface();
 
-    /* Call once at the beginning of the program to reset IO pins. */
+    /* Call once at the beginning of the program to initialize. */
     void init();
-    /* Call to initiate a read cycle on the C1351. */
+    /* Synchronize the C1351 and initiate a read cycle, start capture timers. */
     void setModeSync();
-    /*  After initiating a read cycle with setModeSync(), wait 256uS and call setModeRead()
-        to put the pins into input mode and wait for inputs to go high.
-        The time elapsed indicates the mouse position.
-    */
+    /* Prepare for input capture event. */
     void setModeRead();
-    /* Call regularly to update mouse state. Then use
+    /* Call regularly (every 20ms or so) to update mouse state. Then use
      * getVelocityX, getVelocityY, getLeftButtonValue,
      * and getRightButtonValue
      */
@@ -95,10 +117,6 @@ protected:
     void setPotsOutputLow();
     void setPotsInput();
     void initIO();
-    /* Read the most recent POTX and POTY values. */
-    /* TODO: remove? */
-    PotValue getPotXValue();
-    PotValue getPotYValue();
 
     void updateButtons();
 
@@ -106,4 +124,5 @@ protected:
 
 };
 
+}
 #endif
