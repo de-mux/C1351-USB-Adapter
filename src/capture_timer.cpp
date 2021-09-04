@@ -1,17 +1,16 @@
-/* Precise timing of events using hardware input capture pins and
- * timers 1 and 3
- *
- * To use, call initInputCapture(in_pin) in setup to initialize the pin
- * to be used for input capture.
- *
- * To get ready to capture a timing event, call armInputCapture()
- * Check isReady() to see if the capture is ready, then call getInputCaptureTimestamp()
- * to get the value.
- *
- * Capture is disarmed automatically after each successful capture.
- * To disarm manually, call disarmInputCapture()
- *
- */
+/*  Precise timing of events using hardware input capture pins and
+    timers 1 and 3
+
+    To use, call initInputCapture() in setup to initialize the pin
+    to be used for input capture.
+
+    To get ready to capture a timing event, call armInputCapture()
+    Call getInputCaptureTimestamp() to get the most recent value.
+
+    Capture is disarmed automatically after each successful capture.
+    To disarm manually, call disarmInputCapture()
+
+*/
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -20,16 +19,20 @@
 #include "capture_timer.hpp"
 
 
+namespace c1351_mouse {
+
 volatile uint16_t overflowsTimer1 = 0;
 volatile uint16_t timestampTimer1 = 0;
 volatile uint16_t overflowsTimer3 = 0;
 volatile uint16_t timestampTimer3 = 0;
 
 
-uint16_t getInputCaptureTimestamp(TimerNumber n) {
+uint16_t getInputCaptureTimestamp(TimerNumber n)
+{
     if (n == TIMER_1) {
         return timestampTimer1;
-    } else {
+    }
+    else {
         return timestampTimer3;
     }
 }
@@ -71,17 +74,21 @@ ISR(TIMER3_CAPT_vect)
 
 void startTimer1()
 {
+    static_assert(CAPTURE_TIMER_PRESCALE == 1, "only prescale x1 supported");
     TCCR1A = 0;
-    TCCR1B = _BV(ICNC1) | _BV(ICES1) | _BV(CS10);  // Timer 1, input capture on rising edge, no prescaling, noise cancellation
-    //TCCR1B = _BV(ICES1) | _BV(CS10);  // Timer 1, input capture on rising edge, no prescaling, no noise cancellation
-    //TCCR1B = _BV(ICES1) | _BV(CS12) | _BV(CS10);  // Timer 1, input capture on rising edge, 1024x prescaling
+    // Timer 1, input capture on rising edge, no prescaling, noise cancellation
+    TCCR1B = _BV(ICNC1) | _BV(ICES1) | _BV(
+                 CS10);
 }
 
 
 void startTimer3()
 {
+    static_assert(CAPTURE_TIMER_PRESCALE == 1, "only prescale x1 supported");
     TCCR3A = 0;
-    TCCR3B = _BV(ICNC3) | _BV(ICES3) | _BV(CS30);  // Timer 3, input capture on rising edge, no prescaling, noise cancellation
+    // Timer 3, input capture on rising edge, no prescaling, noise cancellation
+    TCCR3B = _BV(ICNC3) | _BV(ICES3) | _BV(
+                 CS30);
 }
 
 
@@ -89,7 +96,8 @@ void stopTimer(TimerNumber n)
 {
     if (n == TIMER_1) {
         TCCR1B = 0;
-    } else {
+    }
+    else {
         TCCR3B = 0;
     }
 }
@@ -103,7 +111,7 @@ void initTimer1()
 }
 
 
-/* Reset timer 1 registers. */
+/* Reset timer 3 registers. */
 void initTimer3()
 {
     TCCR3A = 0;
@@ -140,7 +148,6 @@ void resetCapture3()
 
 void armInputCapture()
 {
-    //cli();
     stopTimer(TIMER_1);
     stopTimer(TIMER_3);
 
@@ -149,7 +156,6 @@ void armInputCapture()
 
     startTimer1();
     startTimer3();
-    //sei();
 }
 
 
@@ -157,8 +163,12 @@ void disarmInputCapture(TimerNumber n)
 {
     if (n == TIMER_1) {
         TIMSK1 &= ~_BV(ICIE1);  // disable capture interrupt
-    } else {
+    }
+    else {
         TIMSK3 &= ~_BV(ICIE3);  // disable capture interrupt
     }
+
     stopTimer(n);
+}
+
 }

@@ -15,6 +15,33 @@
 #include <avr/io.h>
 
 
+template<typename PORT, uint8_t PIN>
+class Pin {
+public:
+    static inline void high()
+    {
+        PORT::setPins(_BV(PIN));
+    }
+    static inline void low()
+    {
+        PORT::clearPins(_BV(PIN));
+    }
+    inline void setDirectionIn(bool enable_pullup = false)
+    {
+        PORT::setDirectionIn(_BV(PIN));
+        PORT::setPins((uint8_t)enable_pullup << PIN);
+    }
+    static inline void setDirectionOut()
+    {
+        PORT::setDirectionOut(_BV(PIN));
+    }
+    static inline bool read()
+    {
+        return PORT::pinRead() & (uint8_t)(_BV(PIN));
+    }
+};
+
+
 //Port definitions for ATTiny, ATMega families.
 #define DECLARE_PORT(CLASS_NAME, PORT_NAME, DDR_NAME, PIN_NAME) \
 class CLASS_NAME{\
@@ -31,70 +58,43 @@ static inline void    setDirection(uint8_t value){DDR_NAME = value;}\
 };
 
 
-template<typename PORT, uint8_t PIN>
-class Pin {
-public:
-    static inline void high()
-    {
-        PORT::setPins(_BV(PIN));
-    }
-    static inline void low()
-    {
-        PORT::clearPins(_BV(PIN));
-    }
-    inline void setDirectionIn(bool enable_pullup=false)
-    {
-        PORT::setDirectionIn(_BV(PIN));
-        PORT::setPins((uint8_t)enable_pullup << PIN);
-    }
-    static inline void setDirectionOut()
-    {
-        PORT::setDirectionOut(_BV(PIN));
-    }
-    static inline bool read()
-    {
-        return PORT::pinRead() & (uint8_t)(_BV(PIN));
-    }
-};
-
-
 #ifdef PORTA
-DECLARE_PORT(PortA, PORTA, DDRA, PINA)
+    DECLARE_PORT(PortA, PORTA, DDRA, PINA)
 #endif
 #ifdef PORTB
-DECLARE_PORT(PortB, PORTB, DDRB, PINB)
+    DECLARE_PORT(PortB, PORTB, DDRB, PINB)
 #endif
 #ifdef PORTC
-DECLARE_PORT(PortC, PORTC, DDRC, PINC)
+    DECLARE_PORT(PortC, PORTC, DDRC, PINC)
 #endif
 #ifdef PORTD
-DECLARE_PORT(PortD, PORTD, DDRD, PIND)
+    DECLARE_PORT(PortD, PORTD, DDRD, PIND)
 #endif
 #ifdef PORTE
-DECLARE_PORT(PortE, PORTE, DDRE, PINE)
+    DECLARE_PORT(PortE, PORTE, DDRE, PINE)
 #endif
 #ifdef PORTF
-DECLARE_PORT(PortF, PORTF, DDRF, PINF)
+    DECLARE_PORT(PortF, PORTF, DDRF, PINF)
 #endif
 #ifdef PORTG
-DECLARE_PORT(PortG, PORTG, DDRG, PING)
+    DECLARE_PORT(PortG, PORTG, DDRG, PING)
 #endif
 #ifdef PORTH
-DECLARE_PORT(PortH, PORTH, DDRH, PINH)
+    DECLARE_PORT(PortH, PORTH, DDRH, PINH)
 #endif
 #ifdef PORTJ
-DECLARE_PORT(PortJ, PORTJ, DDRJ, PINJ)
+    DECLARE_PORT(PortJ, PORTJ, DDRJ, PINJ)
 #endif
 #ifdef PORTK
-DECLARE_PORT(PortK, PORTK, DDRK, PINK)
+    DECLARE_PORT(PortK, PORTK, DDRK, PINK)
 #endif
 #ifdef PORTL
-DECLARE_PORT(PortL, PORTL, DDRL, PINL)
+    DECLARE_PORT(PortL, PORTL, DDRL, PINL)
 #endif
 #ifdef PORTQ
-DECLARE_PORT(PortQ, PORTQ, DDRQ, PINQ)
+    DECLARE_PORT(PortQ, PORTQ, DDRQ, PINQ)
 #endif
 #ifdef PORTR
-DECLARE_PORT(PortR, PORTR, DDRR, PINR)
+    DECLARE_PORT(PortR, PORTR, DDRR, PINR)
 #endif
 #endif //IOPIN_H

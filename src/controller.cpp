@@ -4,9 +4,15 @@
 #include "capture_timer.hpp"
 #include "controller.hpp"
 #ifdef ENABLE_VIRTUAL_SERIAL
-#include "mouse.h"
+    #include "mouse.h"
 #endif
 
+
+static_assert(F_CPU >= 1000000, "CPU frequency must be at least 1MHz");
+const int CPU_TO_US_MULTIPLIER = F_CPU / 1000000;
+
+
+namespace c1351_mouse {
 
 C1351Interface::C1351Interface() : potXValue(0), potYValue(0), potXValueOld(0),
     potYValueOld(0), velocityX(0), velocityY(0), velocityAccumX(0), velocityAccumY(0),
@@ -20,11 +26,11 @@ void C1351Interface::initIO()
 {
     io_pin.debug.setDirectionOut();
 
-    io_pin.up_btn2.setDirectionIn();
-    io_pin.down.setDirectionIn();
-    io_pin.left.setDirectionIn();
-    io_pin.right.setDirectionIn();
-    io_pin.btn1.setDirectionIn();
+    io_pin.up_btn2.setDirectionIn(true);
+    io_pin.down.setDirectionIn(true);
+    io_pin.left.setDirectionIn(true);
+    io_pin.right.setDirectionIn(true);
+    io_pin.btn1.setDirectionIn(true);
 
     setPotsOutputLow();
 }
@@ -40,7 +46,7 @@ void C1351Interface::init()
 
 void C1351Interface::setModeSync()
 {
-    io_pin.debug.low();
+    //io_pin.debug.low();
 
     // TODO: are these necessary?
     disarmInputCapture(TIMER_1);
@@ -59,7 +65,7 @@ void C1351Interface::setModeSync()
 
 void C1351Interface::setModeRead()
 {
-    io_pin.debug.high();
+    //io_pin.debug.high();
     setPotsInput();
 }
 
@@ -67,10 +73,17 @@ void C1351Interface::setModeRead()
 /* Call to update pot values with most recent input capture timestamp. */
 void C1351Interface::updatePotValues()
 {
+    // Subtract the first 256 uS from the captured timestamp -- this is the
+    // amount of time the C1351 will be in "sync" state after its SYNC pin
+    // is pulled low.
+    const uint16_t TIMESTAMP_ADJUST_US = 256;
+    const uint16_t TIMESTAMP_ADJUST = (F_CPU / 1000000.0) * TIMESTAMP_ADJUST_US /
+                                      CAPTURE_TIMER_PRESCALE;
+
     potXValueOld = potXValue;
     potYValueOld = potYValue;
-    potXValue = getInputCaptureTimestamp(TIMER_1) - 16 * 256;
-    potYValue = getInputCaptureTimestamp(TIMER_3) - 16 * 256;
+    potXValue = getInputCaptureTimestamp(TIMER_1) - TIMESTAMP_ADJUST;
+    potYValue = getInputCaptureTimestamp(TIMER_3) - TIMESTAMP_ADJUST;
 }
 
 
@@ -79,22 +92,18 @@ void C1351Interface::updatePotValues()
 */
 void C1351Interface::accumulateVelocities()
 {
-    //const auto shift_bits = captureTimerBits - potValueBits;
-
-    //velocityX = potValueToVelocity(potXValueOld, potXValue) / 16;
-    //velocityY = -potValueToVelocity(potYValueOld, potYValue) / 16;
-    //PORT(PORT_DEBUG) &= ~_BV(PIN_DEBUG);
     auto new_x_velocity = potValueToVelocity(potXValueOld, potXValue);
     auto new_y_velocity = -potValueToVelocity(potYValueOld, potYValue);
 
-    velocityAccumX += new_x_velocity; // / 16;
-    velocityAccumY += new_y_velocity; // / 16;
-    //PORT(PORT_DEBUG) |= _BV(PIN_DEBUG);
+    velocityAccumX += new_x_velocity;
+    velocityAccumY += new_y_velocity;
 }
 
 
 void C1351Interface::updateButtons()
 {
+    buttonLeftPressed = !io_pin.btn1.read();
+    buttonRightPressed = !io_pin.up_btn2.read();
 }
 
 
@@ -105,14 +114,12 @@ void C1351Interface::updateButtons()
 void C1351Interface::update()
 {
 #ifdef ENABLE_VIRTUAL_SERIAL
-    serialPrintNum(velocityAccumX/16);
+    serialPrintNum(velocityAccumX / CPU_TO_US_MULTIPLIER);
 #endif
-    velocityX = velocityAccumX / 16;
-    velocityY = velocityAccumY / 16;
+    velocityX = velocityAccumX / CPU_TO_US_MULTIPLIER;
+    velocityY = velocityAccumY / CPU_TO_US_MULTIPLIER;
     velocityAccumX = 0;
     velocityAccumY = 0;
-    //updatePotValues();
-    //updateVelocities();
 }
 
 
@@ -125,18 +132,6 @@ int8_t C1351Interface::getVelocityX()
 int8_t C1351Interface::getVelocityY()
 {
     return velocityY;
-}
-
-
-PotValue C1351Interface::getPotXValue()
-{
-    return potXValue;
-}
-
-
-PotValue C1351Interface::getPotYValue()
-{
-    return potYValue;
 }
 
 
@@ -183,3 +178,4 @@ int16_t C1351Interface::potValueToVelocity(PotValue oldVal, PotValue newVal)
     }
 }
 
+}
