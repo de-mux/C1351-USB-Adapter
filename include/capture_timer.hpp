@@ -19,6 +19,8 @@ uint16_t getInputCaptureTimestamp(TimerNumber);
 void initInputCapture();
 void armInputCapture();
 void disarmInputCapture(TimerNumber);
+/* Returns true if timer is currently running, false otherwise */
+bool timerRunning(TimerNumber);
 
 }
 #endif

@@ -24,32 +24,28 @@ typedef uint16_t PotValue;
  *
  *  DB9 (C1351)   ItsyBitsy pin   Function     Prop. mode    Joy. mode
  * ------------- --------------- ----------- -------------- -----------
- *            1   5               GPIO        Rt btn         Up
- *            2   6               GPIO        -              Down
- *            3   7               GPIO        -              Left
- *            4   8               GPIO        -              Right
+ *            1   2 (SDA)         GPIO        Rt btn         Up
+ *            2   SCK             GPIO        -              Down
+ *            3   8               GPIO        -              Left
+ *            4   6               GPIO        -              Right
  *            5   13              ICP3        Y pos (POTY)   -
- *            6   9               GPIO        Left btn       Left btn
+ *            6   3 (SCL)         GPIO        Left btn       Left btn
  *            7   Vcc                         5V             5V
  *            8   GND                         GND            GND
  *            9   4               ICP1/GPIO   X pos (POTX)   Right btn
  */
 struct C1351_IO {
-    Pin<PortB, 4> right;     // ItsyBitsy pin 8
-    Pin<PortB, 5> btn1;      // ItsyBitsy pin 9
+    Pin<PortB, 1> down;      // ItsyBitsy pin SCK
+    Pin<PortB, 4> left;      // ItsyBitsy pin 8
     Pin<PortB, 6> debug;     // ItsyBitsy pin 10
 
-    Pin<PortC, 6> up_btn2;   // ItsyBitsy pin 5
     Pin<PortC, 7> poty;      // ItsyBitsy pin 13, ICP3
 
+    Pin<PortD, 0> btn1;      // ItsyBitsy pin 3 (SCL)
+    Pin<PortD, 1> up_btn2;   // ItsyBitsy pin 2 (SDA)
     Pin<PortD, 4> btn2_potx; // ItsyBitsy pin 4, ICP1
-    Pin<PortD, 6> down;      // ItsyBitsy pin 6
-
-    Pin<PortE, 6> left;      // ItsyBitsy pin 7
+    Pin<PortD, 7> right;     // ItsyBitsy pin 6
 };
-
-
-//template<typename IO_PIN_TYPE>
 
 
 /*  C1351 mouse interface.
@@ -90,16 +86,13 @@ public:
      */
     void update();
 
-    int8_t getVelocityX();
-    int8_t getVelocityY();
-    bool getLeftButtonValue();
-    bool getRightButtonValue();
+    int8_t getVelocityX() const;
+    int8_t getVelocityY() const;
+    bool getLeftButtonValue() const;
+    bool getRightButtonValue() const;
 
 protected:
     C1351_IO io_pin;
-
-    /* Number of bits used for POT values. */
-    const uint8_t potValueBits = 8;
 
     volatile PotValue potXValue = 0;
     volatile PotValue potYValue = 0;
