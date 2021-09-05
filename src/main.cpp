@@ -96,9 +96,28 @@ void setupMainInterrupt(int interval_us)
 }
 
 
+/* Set all pins to input with internal pullup to ensure defined levels
+ * and reduce power consumption for unused pins.
+ */
+void clearIO()
+{
+    PortB::setDirection(0);
+    PortB::setPins(0xff);
+    PortC::setDirection(0);
+    PortC::setPins(0xff);
+    PortD::setDirection(0);
+    PortD::setPins(0xff);
+    PortE::setDirection(0);
+    PortE::setPins(0xff);
+    PortF::setDirection(0);
+    PortF::setPins(0xff);
+}
+
+
 /* Main program entry point. */
 int main(void)
 {
+    clearIO();
     setupUsbMouse();
     c1351.init();
     setupMainInterrupt(MAIN_INTERRUPT_INTERVAL_US);

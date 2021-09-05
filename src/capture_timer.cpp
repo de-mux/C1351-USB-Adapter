@@ -76,6 +76,7 @@ void startTimer1()
 {
     static_assert(CAPTURE_TIMER_PRESCALE == 1, "only prescale x1 supported");
     TCCR1A = 0;
+    overflowsTimer1 = 0;
     // Timer 1, input capture on rising edge, no prescaling, noise cancellation
     TCCR1B = _BV(ICNC1) | _BV(ICES1) | _BV(
                  CS10);
@@ -86,6 +87,7 @@ void startTimer3()
 {
     static_assert(CAPTURE_TIMER_PRESCALE == 1, "only prescale x1 supported");
     TCCR3A = 0;
+    overflowsTimer3 = 0;
     // Timer 3, input capture on rising edge, no prescaling, noise cancellation
     TCCR3B = _BV(ICNC3) | _BV(ICES3) | _BV(
                  CS30);
@@ -170,5 +172,18 @@ void disarmInputCapture(TimerNumber n)
 
     stopTimer(n);
 }
+
+
+bool timerRunning(TimerNumber n)
+{
+    if (n == TIMER_1) {
+        return TCCR1B & (_BV(CS12) | _BV(CS11) | _BV(CS10));
+        //return TIMSK1 & ~_BV(ICIE1);
+    } else {
+        return TCCR3B & (_BV(CS32) | _BV(CS31) | _BV(CS30));
+        //return TIMSK3 & ~_BV(ICIE3);
+    }
+}
+
 
 }

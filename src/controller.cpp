@@ -48,6 +48,8 @@ void C1351Interface::setModeSync()
 {
     //io_pin.debug.low();
 
+    bool last_capture_invalid = timerRunning(TIMER_3);
+
     // TODO: are these necessary?
     disarmInputCapture(TIMER_1);
     disarmInputCapture(TIMER_3);
@@ -56,6 +58,13 @@ void C1351Interface::setModeSync()
 
     setPotsOutputLow();
 
+    if (last_capture_invalid) {
+        // If Timer 3 (POTY) is still running at the start of a sync, it means
+        // we didn't detect a positive edge during the last sync.
+        // This could happen if there is no mouse connected, or if the mouse is
+        // in "joystick"/"C1350" mode.
+        return;
+    }
     updatePotValues();
     accumulateVelocities();
 
@@ -123,25 +132,25 @@ void C1351Interface::update()
 }
 
 
-int8_t C1351Interface::getVelocityX()
+int8_t C1351Interface::getVelocityX() const
 {
     return velocityX;
 }
 
 
-int8_t C1351Interface::getVelocityY()
+int8_t C1351Interface::getVelocityY() const
 {
     return velocityY;
 }
 
 
-bool C1351Interface::getLeftButtonValue()
+bool C1351Interface::getLeftButtonValue() const
 {
     return buttonLeftPressed;
 }
 
 
-bool C1351Interface::getRightButtonValue()
+bool C1351Interface::getRightButtonValue() const
 {
     return buttonRightPressed;
 }
