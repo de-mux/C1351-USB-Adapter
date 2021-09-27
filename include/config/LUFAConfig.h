@@ -74,6 +74,15 @@
     //      #define DEVICE_STATE_AS_GPIOR            {Insert Value Here}
     #define FIXED_NUM_CONFIGURATIONS         1
     //      #define CONTROL_ONLY_DEVICE
+    /* Some applications prefer to not call the USB_USBTask() management task
+     * regularly while in device mode, as it can complicate code significantly.
+     * Instead, when device mode is used this token can be passed to the library
+     * via the -D switch to allow the library to manage the USB control endpoint
+     * entirely via USB controller interrupts asynchronously to the user
+     * application. When defined, USB_USBTask() does not need to be called when
+     * in USB device mode.
+     * See also USB_Descriptor_Endpoint_t.PollingIntervalMS
+     */
     //#define INTERRUPT_CONTROL_ENDPOINT
     //      #define NO_DEVICE_REMOTE_WAKEUP
     //      #define NO_DEVICE_SELF_POWER

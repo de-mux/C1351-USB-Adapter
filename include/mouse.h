@@ -57,6 +57,19 @@ extern "C"
 #include <LUFA/Drivers/USB/USB.h>
 #include <LUFA/Platform/Platform.h>
 
+
+#if ((AXIS_MIN >= -128) && (AXIS_MAX <= 127))
+typedef USB_MouseReport_Data_t Mouse_Report;
+#elif ((AXIS_MIN >= -32768) && (AXIS_MAX <= 32767))
+typedef struct {
+  uint8_t Button; // Pressed buttons bitmask
+  int16_t X; // X axis value
+  int16_t Y; // Y axis value
+} Mouse_Report;
+#else
+error("AXIS_MIN and AXIS_MAX must fit within int8_t or int16_t");
+#endif
+
 /* Macros: */
 /** LED mask for the library LED driver, to indicate that the USB interface is not ready. */
 #define LEDMASK_USB_NOTREADY      LEDS_LED1
