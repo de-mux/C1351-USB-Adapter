@@ -1,5 +1,6 @@
 #include <avr/interrupt.h>
 #include <avr/io.h>
+#include <stdlib.h>
 
 #include "capture_timer.hpp"
 #include "controller.hpp"
@@ -122,23 +123,23 @@ void C1351Interface::updateButtons()
 */
 void C1351Interface::update()
 {
-#ifdef ENABLE_VIRTUAL_SERIAL
-    serialPrintNum(velocityAccumX / CPU_TO_US_MULTIPLIER);
-#endif
     velocityX = velocityAccumX / CPU_TO_US_MULTIPLIER;
     velocityY = velocityAccumY / CPU_TO_US_MULTIPLIER;
+#ifdef ENABLE_VIRTUAL_SERIAL
+    serialPrintNum(velocityX);
+#endif
     velocityAccumX = 0;
     velocityAccumY = 0;
 }
 
 
-int8_t C1351Interface::getVelocityX() const
+MouseVelocity C1351Interface::getVelocityX() const
 {
     return velocityX;
 }
 
 
-int8_t C1351Interface::getVelocityY() const
+MouseVelocity C1351Interface::getVelocityY() const
 {
     return velocityY;
 }

@@ -37,7 +37,7 @@
 #include "mouse.h"
 
 
-volatile USB_MouseReport_Data_t mouse_report_data;
+volatile Mouse_Report mouse_report_data;
 volatile bool needs_update = true;
 
 #ifdef ENABLE_VIRTUAL_SERIAL
@@ -84,7 +84,7 @@ void serialPrintNum(int16_t n)
 #endif
 
 /** Buffer to hold the previously generated Mouse HID report, for comparison purposes inside the HID class driver. */
-static uint8_t PrevMouseHIDReportBuffer[sizeof(USB_MouseReport_Data_t)];
+static uint8_t PrevMouseHIDReportBuffer[sizeof(Mouse_Report)];
 
 /** LUFA HID Class driver interface configuration and state information. This structure is
     passed to all HID Class driver functions, so that multiple instances of the same class
@@ -267,32 +267,8 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const
         void* ReportData,
         uint16_t* const ReportSize)
 {
-    //USB_MouseReport_Data_t* mouse_report = (USB_MouseReport_Data_t*)ReportData;
-
-    /*
-        uint8_t JoyStatus_LCL    = Joystick_GetStatus();
-        uint8_t ButtonStatus_LCL = Buttons_GetStatus();
-
-        if (JoyStatus_LCL & JOY_UP)
-        mouse_report->Y = -1;
-        else if (JoyStatus_LCL & JOY_DOWN)
-        mouse_report->Y =  1;
-
-        if (JoyStatus_LCL & JOY_LEFT)
-        mouse_report->X = -1;
-        else if (JoyStatus_LCL & JOY_RIGHT)
-        mouse_report->X =  1;
-
-        if (JoyStatus_LCL & JOY_PRESS)
-        mouse_report->Button |= (1 << 0);
-
-        if (ButtonStatus_LCL & BUTTONS_BUTTON1)
-        mouse_report->Button |= (1 << 1);
-    */
-    //mouse_report->X = 1;
-
-    *(USB_MouseReport_Data_t*)ReportData = mouse_report_data;
-    *ReportSize = sizeof(USB_MouseReport_Data_t);
+    *(Mouse_Report*)ReportData = mouse_report_data;
+    *ReportSize = sizeof(Mouse_Report);
 
     if (needs_update) {
         needs_update = false;

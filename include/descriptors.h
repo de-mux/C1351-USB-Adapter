@@ -49,6 +49,27 @@ extern "C"
 #include <LUFA/Drivers/USB/USB.h>
 
 
+/* Minimum and maximum axis values for mouse movement. These are passed to the
+ * host via the HID class report descriptor.
+ * They are compatible with USB_MouseReport_Data_t if they fit within an int8_t
+ * range. Otherwise, the report is structured according to the following format:
+ *
+ * typedef struct {
+ *   uintA_t Button; // Pressed buttons bitmask
+ *   intB_t X; // X axis value
+ *   intB_t Y; // Y axis value
+ * } Mouse_Report;
+ */
+#define AXIS_MIN -32767
+#define AXIS_MAX 32767
+#define BUTTONS 2
+
+
+#define VENDOR_ID 0x03eb
+#define PRODUCT_ID 0x2041
+#define RELEASE_NUMBER VERSION_BCD(1, 0, 0)
+
+
 /* Macros: */
 #ifdef ENABLE_VIRTUAL_SERIAL
 /** Endpoint address of the CDC device-to-host notification IN endpoint. */

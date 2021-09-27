@@ -9,6 +9,7 @@
 namespace c1351_mouse {
 
 typedef uint16_t PotValue;
+typedef int8_t MouseVelocity;
 
 
 /*
@@ -86,8 +87,8 @@ public:
      */
     void update();
 
-    int8_t getVelocityX() const;
-    int8_t getVelocityY() const;
+    MouseVelocity getVelocityX() const;
+    MouseVelocity getVelocityY() const;
     bool getLeftButtonValue() const;
     bool getRightButtonValue() const;
 
@@ -98,8 +99,8 @@ protected:
     volatile PotValue potYValue = 0;
     volatile PotValue potXValueOld = 0;
     volatile PotValue potYValueOld = 0;
-    volatile int8_t velocityX = 0;
-    volatile int8_t velocityY = 0;
+    volatile MouseVelocity velocityX = 0;
+    volatile MouseVelocity velocityY = 0;
     volatile int16_t velocityAccumX = 0;
     volatile int16_t velocityAccumY = 0;
     volatile bool buttonLeftPressed = false;
