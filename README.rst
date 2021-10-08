@@ -39,7 +39,7 @@ Board must have::
 
 Compatible boards::
 
-    - Adafruit ItsyBitsy 32u4 (recommended)
+    - `Adafruit ItsyBitsy 32u4 <https://www.adafruit.com/product/3677>`_ (recommended)
     - Arduino Leonardo
     - Arduino Yun
     - Minimus USB
@@ -66,7 +66,7 @@ Circuit
 Building software
 =================
 
-PlatformIO must be installed::
+`PlatformIO <https://platformio.org/>`_ must be installed::
 
     pip install platformio
 
