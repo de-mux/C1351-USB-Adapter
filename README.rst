@@ -1,5 +1,67 @@
+.. image:: doc/c1351-logo.png
+
 Use your Commodore C1351 mouse with a modern computer.
 
+
+About
+=====
+
+C1351 USB Adapter is an open-source adapter that lets you use a Commodore C1351 mouse with a modern computer. Plug your old mouse into your desktop or laptop computer and use it like any other USB mouse. It shows up as a standard HID mouse, and you can adjust sensitivity in your system preferences.
+
+The firmware makes use of the ATmega's hardware-based input capture counters to ensure extremely accurate readings of the C1351 X and Y positions.
+
+Note that the adapter will not work with a C1350, which uses a different mechanism that works more like a joystick. For C1350, you may want to look at https://github.com/mcgurk/Arduino-USB-HID-RetroJoystickAdapter as a starting point.
+
+Hardware requirements
+=====================
+
+.. image:: doc/adapter.jpg
+
+Parts
+-----
+
+- Adafruit ItsyBitsy 32u4 :ref:`microcontroller-board` or equivalent
+- female DB9 `connector <https://www.digikey.com/short/n0779crd>`_ and `housing <https://www.digikey.com/short/5nq8nq40>`_
+- 9-conductor hookup wire
+- 2x 1000 pF ceramic capacitors
+
+.. _microcontroller-board:
+
+Microcontroller board
+---------------------
+
+Board must have::
+
+    - 5V supply
+    - 16MHz CPU clock rate
+    - 2 input capture pins available (ICP1 and ICP3)
+    - a USB controller chip
+
+Compatible boards::
+
+    - Adafruit ItsyBitsy 32u4 (recommended)
+    - Arduino Leonardo
+    - Arduino Yun
+    - Minimus USB
+    - PJRC Teensy (1.x and 2.x versions)
+
+Other boards with ICP1/ICP3 pins should work, but only Adafruit ItsyBitsy 32u4 has
+been tested -- other boards may have slightly different pinouts and may need adjustments (see Circuit section, below).
+Note that some boards such as Sparkfun Pro Micro also use ATmega32u4, but don't
+expose the ICP3 pin.
+Also note that the board must be TTL compatible -- in other words, it must run
+off a 5V supply.
+
+Important note: many Arduino-based boards have an LED connected to the ICP3 pin. If this is the case,
+you need to **remove the LED** or cut the trace. Otherwise the unit will not work
+properly with the C1351.
+
+Circuit
+-------
+
+- POT_X and POT_Y inputs(ICP1 and ICP3 pins) should have 1000 pF caps tied to ground. They can be soldered directly to the microcontroller board.
+- If dev board has an LED on the ICP3 pin, the LED must be removed
+- See include/controller.hpp for pinout of DB9
 
 Building software
 =================
@@ -38,45 +100,6 @@ Clean
 ::
     make clean
 
-Hardware requirements
-=====================
-
-Microcontroller board
----------------------
-
-Board must have::
-
-    - 2 input capture pins available (ICP1 and ICP3)
-    - a USB controller chip
-    - 16MHz CPU clock rate
-    - 5V supply
-
-Compatible boards::
-
-    - Adafruit ItsyBitsy 32u4
-    - Arduino Leonardo
-    - Arduino Micro
-    - Arduino Yun
-    - Minimus USB
-    - PJRC Teensy (1.x and 2.x versions)
-
-Other boards with ICP1/ICP3 pins should work, but only Adafruit ItsyBitsy 32u4 has
-been tested.
-Note that some boards such as Sparkfun Pro Micro also use ATmega32u4, but don't
-expose the ICP3 pin.
-Also note that the board must be TTL compatible -- in other words, it must run
-off a 5V supply.
-
-Note: many boards have an LED connected to the ICP3 pin. If this is the case,
-you need to **remove the LED** or cut the trace. Otherwise the unit will not work
-properly with the C1351.
-
-Circuit
--------
-
-- POT_X and POT_Y inputs(ICP1 and ICP3 pins) should have 1000 pF caps tied to ground
-- If dev board has an LED on the ICP3 pin, the LED must be removed
-- See include/controller.hpp for pinout of DB9
 
 References
 ==========
@@ -96,7 +119,6 @@ C1351
 - SID implementation using Arduino: https://github.com/frntc/SIDKick/blob/main/Source/SIDKick/SIDKick.ino
 - SID implementation in hardware: https://sourceforge.net/p/sidplay-residfp/wiki/SID%20internals%20-%20Paddles%20Overview/
 
-
 AVR
 ---
 
@@ -112,3 +134,8 @@ LUFA library
 ------------
 
 - https://fourwalledcubicle.com/LUFA.php
+
+Other C1351->USB adapters
+-------------------------
+
+- https://github.com/mcgurk/Arduino-USB-HID-RetroJoystickAdapter
