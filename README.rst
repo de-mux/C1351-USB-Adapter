@@ -20,7 +20,7 @@ Hardware requirements
 Parts
 -----
 
-- Adafruit ItsyBitsy 32u4 :ref:`microcontroller-board` or equivalent
+- Adafruit ItsyBitsy 32u4 microcontroller-board_ or equivalent
 - female DB9 `connector <https://www.digikey.com/short/n0779crd>`_ and `housing <https://www.digikey.com/short/5nq8nq40>`_
 - 9-conductor hookup wire
 - 2x 1000 pF ceramic capacitors
@@ -32,18 +32,18 @@ Microcontroller board
 
 Board must have::
 
-    - 5V supply
-    - 16MHz CPU clock rate
-    - 2 input capture pins available (ICP1 and ICP3)
-    - a USB controller chip
+- 5V supply
+- 16MHz CPU clock rate
+- 2 input capture pins available (ICP1 and ICP3)
+- a USB controller chip
 
 Compatible boards::
 
-    - `Adafruit ItsyBitsy 32u4 <https://www.adafruit.com/product/3677>`_ (recommended)
-    - Arduino Leonardo
-    - Arduino Yun
-    - Minimus USB
-    - PJRC Teensy (1.x and 2.x versions)
+- `Adafruit ItsyBitsy 32u4 <https://www.adafruit.com/product/3677>`_ (recommended)
+- Arduino Leonardo
+- Arduino Yun
+- Minimus USB
+- PJRC Teensy (1.x and 2.x versions)
 
 Other boards with ICP1/ICP3 pins should work, but only Adafruit ItsyBitsy 32u4 has
 been tested -- other boards may have slightly different pinouts and may need adjustments (see Circuit section, below).
@@ -74,30 +74,35 @@ Compile & Upload
 ----------------
 
 ::
+
     make upload
 
 Compile only
 ------------
 
 ::
+
     make
 
 Compile debug
 -------------
 
 ::
+
     make debug
 
 Generate `compile_commands.json`
 --------------------------------
 
 ::
+
     make compiledb
 
 Clean
 -----
 
 ::
+
     make clean
 
 
