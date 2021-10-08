@@ -30,14 +30,14 @@ Parts
 Microcontroller board
 ---------------------
 
-Board must have::
+Board must have:
 
 - 5V supply
 - 16MHz CPU clock rate
 - 2 input capture pins available (ICP1 and ICP3)
 - a USB controller chip
 
-Compatible boards::
+Compatible boards:
 
 - `Adafruit ItsyBitsy 32u4 <https://www.adafruit.com/product/3677>`_ (recommended)
 - Arduino Leonardo
