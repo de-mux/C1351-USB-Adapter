@@ -85,8 +85,9 @@ C1351
 -----
 
 - Technical discussion: http://sensi.org/~svo/[m]ouse/
-- Thorough technical discussion: http://www.c64os.com/post/1351mousedriver
+- In-depth technical discussion: http://www.c64os.com/post/1351mousedriver
 - C1351 mouse driver for 6502 asm: https://github.com/gnacu/1351mousedriver/blob/master/pollmouse.asm
+- C1351 mouse schematics and info: http://monkeyspeak.com/1351/
 - C1351 mouse emulator: https://github.com/svofski/mouse1351/blob/master/c1351.c
 - MOS5717(chip used in C1351) datasheet: http://www.zimmers.net/anonftp/pub/cbm/documents/chipdata/5717.txt
 - C1351 patent: https://patentimages.storage.googleapis.com/df/7b/bd/17f8e7c10822d2/US4886941.pdf
