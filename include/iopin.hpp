@@ -1,12 +1,25 @@
-//*****************************************************************************
-//
-// iopin.h  - AVR pin definition template
-//
-// Copyright(C) 2012 Yuuichi Akagawa
-//
+/*****************************************************************************
+
+ iopin.h  - AVR pin definition template
+ Copyright(C) 2012 Yuuichi Akagawa
+
+ This code was inspired by the Konstantin Chizhov's AVR port templates
 
 
-/* This code was inspired by the Konstantin Chizhov's AVR port templates  */
+ Originally from: https://gist.github.com/YuuichiAkagawa/2001034
+
+ Example (single pin):
+
+    Pin<PortB, 1> debug;
+
+    debug.setDirectionOut();
+    debug.high();
+
+ Example (port):
+
+     PortA::write(0xf7);
+
+******************************************************************************/
 
 #pragma once
 #ifndef IOPIN_H
