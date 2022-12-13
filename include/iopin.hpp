@@ -1,6 +1,6 @@
 /*****************************************************************************
 
- iopin.h  - AVR pin definition template
+ iopin.hpp  - AVR pin definition template
  Copyright(C) 2012 Yuuichi Akagawa
 
  This code was inspired by the Konstantin Chizhov's AVR port templates
